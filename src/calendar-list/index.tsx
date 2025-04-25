@@ -2,7 +2,7 @@ import findIndex from 'lodash/findIndex';
 import PropTypes from 'prop-types';
 import XDate from 'xdate';
 import React, {forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState} from 'react';
-import {FlatList, FlatListProps, View, ViewStyle} from 'react-native';
+import {FlatList, FlatListProps, View, ViewStyle, ScrollView, ScrollViewProps, NativeViewGestureHandlerProps, ScrollView as RNScrollView} from 'react-native';
 import {extractCalendarProps, extractHeaderProps} from '../componentUpdater';
 import {parseDate, toMarkingFormat, xdateToData} from '../interface';
 import {page, sameDate, sameMonth} from '../dateutils';
@@ -37,6 +37,8 @@ export interface CalendarListProps extends CalendarProps, Omit<FlatListProps<any
   showScrollIndicator?: boolean;
   /** Whether to animate the auto month scroll */
   animateScroll?: boolean;
+  /** Custom components for the calendar list */
+  customComponent?:  React.ForwardRefExoticComponent<ScrollViewProps & NativeViewGestureHandlerProps & React.RefAttributes<ScrollView>> 
 }
 
 export interface CalendarListImperativeMethods {
@@ -100,7 +102,8 @@ const CalendarList = (props: CalendarListProps & ContextProp, ref: any) => {
     contentContainerStyle,
     onEndReachedThreshold,
     onEndReached,
-    onHeaderLayout
+    onHeaderLayout,
+    customComponent
   } = props;
 
   const calendarProps = extractCalendarProps(props);
@@ -185,7 +188,9 @@ const CalendarList = (props: CalendarListProps & ContextProp, ref: any) => {
     }
 
     if (scrollAmount !== 0) {
-      list?.current?.scrollToOffset({offset: scrollAmount, animated});
+      if(list?.current) {
+        list?.current?.scrollToOffset({offset: scrollAmount, animated});
+      }
     }
   };
 
@@ -195,7 +200,9 @@ const CalendarList = (props: CalendarListProps & ContextProp, ref: any) => {
     const scrollAmount = calendarSize * (shouldFixRTL ? pastScrollRange - diffMonths : pastScrollRange + diffMonths);
 
     if (scrollAmount !== 0) {
-      list?.current?.scrollToOffset({offset: scrollAmount, animated: animateScroll});
+      if(list?.current) {
+        list?.current?.scrollToOffset({offset: scrollAmount, animated: animateScroll});
+      }
     }
   }, [calendarSize, shouldFixRTL, pastScrollRange, animateScroll]);
 
@@ -307,9 +314,11 @@ const CalendarList = (props: CalendarListProps & ContextProp, ref: any) => {
     }
   ]);
 
+  const CustomComponent = customComponent || RNScrollView;
+
   return (
     <View style={style.current.flatListContainer} testID={testID}>
-      <FlatList
+      <CustomComponent
         ref={list}
         windowSize={shouldFixRTL ? pastScrollRange + futureScrollRange + 1 : undefined}
         style={listStyle}
