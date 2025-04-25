@@ -314,7 +314,7 @@ const CalendarList = (props: CalendarListProps & ContextProp, ref: any) => {
     }
   ]);
 
-  const CustomComponent = customComponent || FlatList;
+  const CustomComponent = customComponent ?? FlatList;
 
   return (
     <View style={style.current.flatListContainer} testID={testID}>
